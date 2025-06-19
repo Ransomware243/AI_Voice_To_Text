@@ -68,7 +68,7 @@ elif module == "Text to Image":
 elif module == "Voice Over":
     st.header("🎙️ Voice Over Generator")
     script_input = st.text_area("Enter narration script:", placeholder="This is a sample narration script.")
-    voice_id = st.text_input("Enter Voice ID (from ElevenLabs)", value="EXAVITQu4vr4xnSDxMaL")
+    voice_id = st.text_input("Enter Voice ID (from ElevenLabs)", value="mICtXKBwZnUg1cC6k90B")
     if st.button("Generate Voice Over"):
         with st.spinner("Generating voiceover via ElevenLabs..."):
             tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
