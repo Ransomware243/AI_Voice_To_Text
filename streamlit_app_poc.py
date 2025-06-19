@@ -54,7 +54,7 @@ elif module == "Text to Image":
                 "Content-Type": "application/json"
             }
             data = {
-                "version": "a9758cb7b05c5795cd0a78a2e0c04ec303b6367fbb9c8f4efbcd687bdfb02e55",
+                "version": "db21e45a9693f515c9c7d0b2f9e39d2b321b3568457788a18c4a7004e0dcd3b9",
                 "input": {"prompt": prompt}
             }
             response = requests.post(url, headers=headers, data=json.dumps(data))
