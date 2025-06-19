@@ -95,6 +95,7 @@ else:
     st.error(f"Voice generation failed. Status: {response.status_code} | {response.text}")
 
 # ---------------- AVATAR VIDEO ----------------
+    
 elif module == "Avatar Video":
     st.header("🧑‍💼 Avatar Video Generator")
     st.markdown("This demo uses the HeyGen API to create an avatar video.")
