@@ -7,7 +7,7 @@ st.set_page_config(page_title="AI Content Creator PoC", layout="centered")
 st.title("🎬 AI Content Creation Studio (Proof of Concept)")
 
 # Load API keys from Streamlit secrets
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 replicate_api = st.secrets["REPLICATE_API_KEY"]
 elevenlabs_api = st.secrets["ELEVENLABS_API_KEY"]
 heygen_api = st.secrets["HEYGEN_API_KEY"]
@@ -23,7 +23,7 @@ if module == "Script Writer":
     tone = st.selectbox("Select tone:", ["Professional", "Inspirational", "Funny", "Casual"])
     if st.button("Generate Script"):
         with st.spinner("Generating script using GPT..."):
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": f"You are a scriptwriter creating a {tone.lower()} script for video narration."},
@@ -32,8 +32,8 @@ if module == "Script Writer":
                 temperature=0.7,
                 max_tokens=600
             )
-            script = response.choices[0].message.content
-            st.text_area("Generated Script:", script, height=300)
+    script = response.choices[0].message.content
+    st.text_area("Generated Script:", script, height=300)
 
 # ---------------- TEXT TO IMAGE ----------------
 elif module == "Text to Image":
