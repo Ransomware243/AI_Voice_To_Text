@@ -21,19 +21,25 @@ if module == "Script Writer":
     st.header("📝 Script Writer")
     prompt = st.text_area("Describe your video idea:", placeholder="A motivational video about perseverance in business")
     tone = st.selectbox("Select tone:", ["Professional", "Inspirational", "Funny", "Casual"])
+    
     if st.button("Generate Script"):
         with st.spinner("Generating script using GPT..."):
-            response = client.chat.completions.create(
-                model="gpt-4",
-                messages=[
-                    {"role": "system", "content": f"You are a scriptwriter creating a {tone.lower()} script for video narration."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.7,
-                max_tokens=600
-            )
-    script = response.choices[0].message.content
-    st.text_area("Generated Script:", script, height=300)
+            try:
+                import openai
+                client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+                response = client.chat.completions.create(
+                    model="gpt-4",
+                    messages=[
+                        {"role": "system", "content": f"You are a scriptwriter creating a {tone.lower()} script for video narration."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=600
+                )
+                script = response.choices[0].message.content
+                st.text_area("Generated Script:", script, height=300)
+            except Exception as e:
+                st.error(f"Script generation failed: {e}")
 
 # ---------------- TEXT TO IMAGE ----------------
 elif module == "Text to Image":
