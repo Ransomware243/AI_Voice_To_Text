@@ -54,7 +54,7 @@ elif module == "Text to Image":
                 "Content-Type": "application/json"
             }
             data = {
-                "version": "db21e45a9693f515c9c7d0b2f9e39d2b321b3568457788a18c4a7004e0dcd3b9",
+                "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
                 "input": {"prompt": prompt}
             }
             response = requests.post(url, headers=headers, data=json.dumps(data))
