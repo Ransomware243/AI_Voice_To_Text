@@ -1,0 +1,230 @@
+Index: streamlit_app_poc.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import streamlit as st\r\nimport openai\r\nimport requests\r\nimport json\r\nimport voice\r\n\r\nst.set_page_config(page_title=\"AI Content Creator PoC\", layout=\"centered\")\r\nst.title(\"\uD83C\uDFAC AI Content Creation Studio (Proof of Concept)\")\r\n\r\n# Load API keys from Streamlit secrets\r\nclient = openai.OpenAI(api_key=st.secrets[\"OPENAI_API_KEY\"])\r\nreplicate_api = st.secrets[\"REPLICATE_API_KEY\"]\r\nelevenlabs_api = st.secrets[\"ELEVENLABS_API_KEY\"]\r\nheygen_api = st.secrets[\"HEYGEN_API_KEY\"]\r\n\r\n# Sidebar menu\r\nst.sidebar.title(\"Modules\")\r\nmodule = st.sidebar.radio(\"Select a feature:\", [\"Script Writer\", \"Text to Image\", \"Voice Over\", \"Avatar Video\"])\r\n\r\n# ---------------- SCRIPT WRITING ----------------\r\nif module == \"Script Writer\":\r\n    st.header(\"\uD83D\uDCDD Script Writer\")\r\n    prompt = st.text_area(\"Describe your video idea:\", placeholder=\"A motivational video about perseverance in business\")\r\n    tone = st.selectbox(\"Select tone:\", [\"Professional\", \"Inspirational\", \"Funny\", \"Casual\"])\r\n    \r\n    if st.button(\"Generate Script\"):\r\n        with st.spinner(\"Generating script using GPT...\"):\r\n            try:\r\n                import openai\r\n                client = openai.OpenAI(api_key=st.secrets[\"OPENAI_API_KEY\"])\r\n                response = client.chat.completions.create(\r\n                    model=\"gpt-3.5-turbo\",\r\n                    messages=[\r\n                        {\"role\": \"system\", \"content\": f\"You are a scriptwriter creating a {tone.lower()} script for video narration.\"},\r\n                        {\"role\": \"user\", \"content\": prompt}\r\n                    ],\r\n                    temperature=0.7,\r\n                    max_tokens=600\r\n                )\r\n                script = response.choices[0].message.content\r\n                st.text_area(\"Generated Script:\", script, height=300)\r\n            except Exception as e:\r\n                st.error(f\"Script generation failed: {e}\")\r\n\r\n# ---------------- TEXT TO IMAGE ----------------\r\nelif module == \"Text to Image\":\r\n    st.header(\"\uD83D\uDDBC\uFE0F Text to Image Generator\")\r\n    prompt = st.text_area(\"Enter image prompt:\", placeholder=\"A futuristic city skyline at sunset\")\r\n    model = \"stability-ai/sdxl\"\r\n    if st.button(\"Generate Image\"):\r\n        with st.spinner(\"Generating image from Replicate SDXL...\"):\r\n            url = f\"https://api.replicate.com/v1/predictions\"\r\n            headers = {\r\n                \"Authorization\": f\"Token {replicate_api}\",\r\n                \"Content-Type\": \"application/json\"\r\n            }\r\n            data = {\r\n                \"stability-ai/sdxl\" : \"39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b\",\r\n                \"input\": {\"prompt\": prompt}\r\n            }\r\n            response = requests.post(url, headers=headers, data=json.dumps(data))\r\n            prediction = response.json()\r\n            if prediction.get(\"output\"):\r\n                st.image(prediction[\"output\"][0], caption=\"Generated Image\")\r\n            else:\r\n                st.error(\"Image generation failed. Try a different prompt.\")\r\n\r\n# ---------------- VOICE OVER ----------------\r\nelif module == \"Voice Over\":\r\n    st.header(\"\uD83C\uDF99\uFE0F Voice Over Generator\")\r\n    script_input = st.text_area(\"Enter narration script:\", placeholder=\"This is a sample narration script.\")\r\n    voice_id = st.text_input(\"Enter Voice ID (from ElevenLabs)\", value=\"mICtXKBwZnUg1cC6k90B\")\r\n    if st.button(\"Generate Voice Over\"):\r\n        with st.spinner(\"Generating voiceover via ElevenLabs...\"):\r\n            elif module == \"Voice Over\":\r\n    st.header(\"\uD83C\uDF99\uFE0F Voice Over Generator\")\r\n    script_input = st.text_area(\"Enter narration script:\", placeholder=\"This is a sample narration script.\")\r\n    voice_id = st.text_input(\"Enter Voice ID (from ElevenLabs)\", value=\"mICtXKBwZnUg1cC6k90B\")\r\n    if st.button(\"Generate Voice Over\"):\r\n        with st.spinner(\"Generating voiceover via ElevenLabs...\"):\r\n        tts_url = f\"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}\"\r\n\t    headers = {\r\n    \t\t\"xi-api-key\": elevenlabs_api,\r\n    \t\t\"Content-Type\": \"application/json\",\r\n    \t\t\"Accept\": \"audio/mpeg\"\r\n}\r\npayload = {\r\n    \"text\": script_input,\r\n    \"model_id\": \"eleven_multilingual_v2\",  # required in v1.2+\r\n    \"voice_settings\": {\r\n        \"stability\": 0.5,\r\n        \"similarity_boost\": 0.75\r\n    }\r\n}\r\nresponse = requests.post(tts_url, headers=headers, json=payload)\r\n\r\nif response.status_code == 200:\r\n    with open(\"output.mp3\", \"wb\") as f:\r\n        f.write(response.content)\r\n    st.audio(\"output.mp3\")\r\nelse:\r\n    st.error(f\"Voice generation failed. Status: {response.status_code} | {response.text}\")\r\n\r\n\r\n# ---------------- AVATAR VIDEO ----------------\r\nelif module == \"Avatar Video\":\r\n    st.header(\"\uD83E\uDDD1\u200D\uD83D\uDCBC Avatar Video Generator\")\r\n    st.markdown(\"This demo uses the HeyGen API to create an avatar video.\")\r\n    video_script = st.text_area(\"Enter script for avatar video:\")\r\n    avatar_id = st.text_input(\"Enter Avatar ID (HeyGen)\", value=\"Default\")\r\n    if st.button(\"Generate Avatar Video\"):\r\n        with st.spinner(\"Submitting to HeyGen...\"):\r\n            url = \"https://api.heygen.com/v1/video/generate\"\r\n            headers = {\r\n                \"Authorization\": f\"Bearer {heygen_api}\",\r\n                \"Content-Type\": \"application/json\"\r\n            }\r\n            payload = {\r\n                \"avatar_id\": avatar_id,\r\n                \"script\": video_script,\r\n                \"voice\": \"en_us_001\"\r\n            }\r\n            res = requests.post(url, headers=headers, json=payload)\r\n            if res.status_code == 200:\r\n                video_info = res.json()\r\n                st.json(video_info)\r\n            else:\r\n                st.error(\"Video generation failed. Check avatar ID and script.\")\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/streamlit_app_poc.py b/streamlit_app_poc.py
+--- a/streamlit_app_poc.py	(revision 6638edd56c0fab1c4dfa56f7912bd8141df6dd30)
++++ b/streamlit_app_poc.py	(date 1750435967292)
+@@ -19,110 +19,107 @@
+ 
+ # ---------------- SCRIPT WRITING ----------------
+ if module == "Script Writer":
+-    st.header("📝 Script Writer")
+-    prompt = st.text_area("Describe your video idea:", placeholder="A motivational video about perseverance in business")
+-    tone = st.selectbox("Select tone:", ["Professional", "Inspirational", "Funny", "Casual"])
+-    
+-    if st.button("Generate Script"):
+-        with st.spinner("Generating script using GPT..."):
+-            try:
+-                import openai
+-                client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+-                response = client.chat.completions.create(
+-                    model="gpt-3.5-turbo",
+-                    messages=[
+-                        {"role": "system", "content": f"You are a scriptwriter creating a {tone.lower()} script for video narration."},
+-                        {"role": "user", "content": prompt}
+-                    ],
+-                    temperature=0.7,
+-                    max_tokens=600
+-                )
+-                script = response.choices[0].message.content
+-                st.text_area("Generated Script:", script, height=300)
+-            except Exception as e:
+-                st.error(f"Script generation failed: {e}")
++	st.header("📝 Script Writer")
++	prompt = st.text_area("Describe your video idea:",
++						  placeholder="A motivational video about perseverance in business")
++	tone = st.selectbox("Select tone:", ["Professional", "Inspirational", "Funny", "Casual"])
++
++	if st.button("Generate Script"):
++		with st.spinner("Generating script using GPT..."):
++			try:
++				import openai
++
++				client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
++				response = client.chat.completions.create(
++					model="gpt-3.5-turbo",
++					messages=[
++						{"role": "system",
++						 "content": f"You are a scriptwriter creating a {tone.lower()} script for video narration."},
++						{"role": "user", "content": prompt}
++					],
++					temperature=0.7,
++					max_tokens=600
++				)
++				script = response.choices[0].message.content
++				st.text_area("Generated Script:", script, height=300)
++			except Exception as e:
++				st.error(f"Script generation failed: {e}")
+ 
+ # ---------------- TEXT TO IMAGE ----------------
+ elif module == "Text to Image":
+-    st.header("🖼️ Text to Image Generator")
+-    prompt = st.text_area("Enter image prompt:", placeholder="A futuristic city skyline at sunset")
+-    model = "stability-ai/sdxl"
+-    if st.button("Generate Image"):
+-        with st.spinner("Generating image from Replicate SDXL..."):
+-            url = f"https://api.replicate.com/v1/predictions"
+-            headers = {
+-                "Authorization": f"Token {replicate_api}",
+-                "Content-Type": "application/json"
+-            }
+-            data = {
+-                "stability-ai/sdxl" : "39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+-                "input": {"prompt": prompt}
+-            }
+-            response = requests.post(url, headers=headers, data=json.dumps(data))
+-            prediction = response.json()
+-            if prediction.get("output"):
+-                st.image(prediction["output"][0], caption="Generated Image")
+-            else:
+-                st.error("Image generation failed. Try a different prompt.")
++	st.header("🖼️ Text to Image Generator")
++	prompt = st.text_area("Enter image prompt:", placeholder="A futuristic city skyline at sunset")
++	model = "stability-ai/sdxl"
++	if st.button("Generate Image"):
++		with st.spinner("Generating image from Replicate SDXL..."):
++			url = f"https://api.replicate.com/v1/predictions"
++			headers = {
++				"Authorization": f"Token {replicate_api}",
++				"Content-Type": "application/json"
++			}
++			data = {
++				"stability-ai/sdxl": "39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
++				"input": {"prompt": prompt}
++			}
++			response = requests.post(url, headers=headers, data=json.dumps(data))
++			prediction = response.json()
++			if prediction.get("output"):
++				st.image(prediction["output"][0], caption="Generated Image")
++			else:
++				st.error("Image generation failed. Try a different prompt.")
+ 
+ # ---------------- VOICE OVER ----------------
+ elif module == "Voice Over":
+-    st.header("🎙️ Voice Over Generator")
+-    script_input = st.text_area("Enter narration script:", placeholder="This is a sample narration script.")
+-    voice_id = st.text_input("Enter Voice ID (from ElevenLabs)", value="mICtXKBwZnUg1cC6k90B")
+-    if st.button("Generate Voice Over"):
+-        with st.spinner("Generating voiceover via ElevenLabs..."):
+-            elif module == "Voice Over":
+-    st.header("🎙️ Voice Over Generator")
+-    script_input = st.text_area("Enter narration script:", placeholder="This is a sample narration script.")
+-    voice_id = st.text_input("Enter Voice ID (from ElevenLabs)", value="mICtXKBwZnUg1cC6k90B")
+-    if st.button("Generate Voice Over"):
+-        with st.spinner("Generating voiceover via ElevenLabs..."):
+-        tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+-	    headers = {
+-    		"xi-api-key": elevenlabs_api,
+-    		"Content-Type": "application/json",
+-    		"Accept": "audio/mpeg"
+-}
+-payload = {
+-    "text": script_input,
+-    "model_id": "eleven_multilingual_v2",  # required in v1.2+
+-    "voice_settings": {
+-        "stability": 0.5,
+-        "similarity_boost": 0.75
+-    }
+-}
+-response = requests.post(tts_url, headers=headers, json=payload)
++	st.header("🎙️ Voice Over Generator")
++	script_input = st.text_area("Enter narration script:", placeholder="This is a sample narration script.")
++	voice_id = st.text_input("Enter Voice ID (from ElevenLabs)", value="mICtXKBwZnUg1cC6k90B")
++if st.button("Generate Voice Over"):
++	with st.spinner("Generating voiceover via ElevenLabs..."):
++		tts_url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
++		headers = {
++			"xi-api-key": elevenlabs_api,
++			"Content-Type": "application/json",
++			"Accept": "audio/mpeg"
++		}
++		payload = {
++			"text": script_input,
++			"model_id": "eleven_multilingual_v2",  # required in v1.2+
++			"voice_settings": {
++				"stability": 0.5,
++				"similarity_boost": 0.75
++			}
++		}
++		response = requests.post(tts_url, headers=headers, json=payload)
+ 
+-if response.status_code == 200:
+-    with open("output.mp3", "wb") as f:
+-        f.write(response.content)
+-    st.audio("output.mp3")
+-else:
+-    st.error(f"Voice generation failed. Status: {response.status_code} | {response.text}")
++		if response.status_code == 200:
++			with open("output.mp3", "wb") as f:
++				f.write(response.content)
++			st.audio("output.mp3")
++		else:
++			st.error(f"Voice generation failed. Status: {response.status_code} | {response.text}")
+ 
+ 
+ # ---------------- AVATAR VIDEO ----------------
+ elif module == "Avatar Video":
+-    st.header("🧑‍💼 Avatar Video Generator")
+-    st.markdown("This demo uses the HeyGen API to create an avatar video.")
+-    video_script = st.text_area("Enter script for avatar video:")
+-    avatar_id = st.text_input("Enter Avatar ID (HeyGen)", value="Default")
+-    if st.button("Generate Avatar Video"):
+-        with st.spinner("Submitting to HeyGen..."):
+-            url = "https://api.heygen.com/v1/video/generate"
+-            headers = {
+-                "Authorization": f"Bearer {heygen_api}",
+-                "Content-Type": "application/json"
+-            }
+-            payload = {
+-                "avatar_id": avatar_id,
+-                "script": video_script,
+-                "voice": "en_us_001"
+-            }
+-            res = requests.post(url, headers=headers, json=payload)
+-            if res.status_code == 200:
+-                video_info = res.json()
+-                st.json(video_info)
+-            else:
+-                st.error("Video generation failed. Check avatar ID and script.")
++	st.header("🧑‍💼 Avatar Video Generator")
++	st.markdown("This demo uses the HeyGen API to create an avatar video.")
++	video_script = st.text_area("Enter script for avatar video:")
++	avatar_id = st.text_input("Enter Avatar ID (HeyGen)", value="Default")
++	if st.button("Generate Avatar Video"):
++		with st.spinner("Submitting to HeyGen..."):
++			url = "https://api.heygen.com/v1/video/generate"
++			headers = {
++				"Authorization": f"Bearer {heygen_api}",
++				"Content-Type": "application/json"
++			}
++			payload = {
++				"avatar_id": avatar_id,
++				"script": video_script,
++				"voice": "en_us_001"
++			}
++			res = requests.post(url, headers=headers, json=payload)
++			if res.status_code == 200:
++				video_info = res.json()
++				st.json(video_info)
++			else:
++				st.error("Video generation failed. Check avatar ID and script.")
+\ No newline at end of file
+Index: .idea/.gitignore
+===================================================================
+diff --git a/.idea/.gitignore b/.idea/.gitignore
+new file mode 100644
+--- /dev/null	(date 1750432716492)
++++ b/.idea/.gitignore	(date 1750432716492)
+@@ -0,0 +1,8 @@
++# Default ignored files
++/shelf/
++/workspace.xml
++# Editor-based HTTP Client requests
++/httpRequests/
++# Datasource local storage ignored files
++/dataSources/
++/dataSources.local.xml
